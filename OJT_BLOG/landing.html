@@ -157,10 +157,11 @@ function computeOjtStatsFromTimes(times) {
 }
 
 function formatHoursDisplay(value) {
-    let num = parseFloat(value);
-    if (isNaN(num)) return "0.00";
-
-    return num.toFixed(2);
+    let cleaned = cleanNumber(value);
+    if (Number.isInteger(cleaned)) {
+        return cleaned.toString();
+    }
+    return cleaned.toString();
 }
 
 /* ===============================
