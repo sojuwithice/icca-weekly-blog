@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICCA CMS | Supabase Edition</title>
+    <title>ICCA CMS | Upload Edition</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -54,6 +54,7 @@
             width: 100%; padding: 12px; border: 2px solid #eef2f6; border-radius: 12px; font-size: 14px; outline: none;
         }
 
+        /* Pair Styling */
         .td-pair-group {
             background: #f9fbfd;
             border: 1px solid #eef2f8;
@@ -75,26 +76,27 @@
             margin-top: 10px;
         }
 
-        .img-preview-box {
-            width: 100%;
-            background: #eee;
-            border-radius: 10px;
-            margin-top: 8px;
-            padding: 8px;
-            overflow: visible;
-        }
+        /* Preview area for image */
+       .img-preview-box {
+    width: 100%;
+    background: #eee;
+    border-radius: 10px;
+    margin-top: 8px;
+    padding: 8px;
+    overflow: visible;
+}
 
         .preview-gallery {
-            display: grid !important;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-            width: 100%;
-        }
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+}
 
-        .preview-gallery img {
-            display: block;
-        }
+.preview-gallery img {
+    display: block;
+}
 
         .preview-item {
             position: relative;
@@ -134,6 +136,7 @@
             background: #c0392b;
         }
 
+        /* Entry List styling */
         .entry-item {
             background: white; border: 1px solid #eef2f8; padding: 15px;
             border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
@@ -150,9 +153,17 @@
             transition: 0.2s;
         }
 
-        .action-btn:hover { background: #f1f5f9; }
-        .edit-btn { color: var(--primary); }
-        .delete-btn { color: var(--danger); }
+        .action-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .edit-btn {
+            color: var(--primary);
+        }
+
+        .delete-btn {
+            color: var(--danger);
+        }
 
         .days-badge {
             background: #eef2fa;
@@ -190,23 +201,15 @@
             color: #1e293b;
         }
         
-        .loading-spinner {
-            text-align: center;
-            padding: 40px;
-            color: var(--gray);
-        }
-        
-        .empty-state {
-            text-align: center;
-            color: var(--gray);
-            padding: 40px;
+        .cancel-edit-btn:hover {
+            background: #cbd5e1;
         }
     </style>
 </head>
 <body>
 
     <div class="dashboard-header">
-        <h1>ICCA CMS (Supabase Edition)</h1>
+        <h1>ICCA CMS (Upload Edition)</h1>
     </div>
 
     <div class="admin-grid">
@@ -243,313 +246,491 @@
                 <div id="pairsContainer"></div>
             </div>
 
-            <button class="btn-save" onclick="saveContent()">Publish to Supabase</button>
+            <button class="btn-save" onclick="saveContent()">Publish to Blog</button>
+                        <button 
+            style="
+                margin-top:12px;
+                background:#0f766e;
+                color:white;
+                border:none;
+                padding:14px;
+                width:100%;
+                border-radius:14px;
+                font-weight:700;
+                cursor:pointer;"
+            onclick="migrateToSupabase()"
+            >
+             MIGRATE TO SUPABASE (SAFE)
+            </button>
         </div>
 
         <div class="card">
             <h3>Published Content</h3>
-            <div id="contentList">
-                <div class="loading-spinner">Loading entries from Supabase...</div>
-            </div>
+            <div id="contentList"></div>
         </div>
     </div>
+   
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://xtgbphcuzreotwuaiwyx.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0Z2JwaGN1enJlb3R3dWFpd3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NTUyODQsImV4cCI6MjA5NDAzMTI4NH0.59pNISn8T7RZULUjntEm7r4PNMx-2ke_bqhkqkEHR30"
+  );
+</script>
+
     <script>
-        const supabase = supabase.createClient(
-            "https://xtgbphcuzreotwuaiwyx.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0Z2JwaGN1enJlb3R3dWFpd3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NTUyODQsImV4cCI6MjA5NDAzMTI4NH0.59pNISn8T7RZULUjntEm7r4PNMx-2ke_bqhkqkEHR30"
-        );
-
+        // ======================== PERSISTENT EDIT MODE ========================
+        // We store edit session in localStorage so it survives refresh
         let isEditingMode = false;
-        let editingEntryId = null;
-        let currentImagesData = new Map(); // Store temp image URLs per pair
+        let editingMonth = null;
+        let editingId = null;
+        let editingOriginalData = null; // store original entry data for reference
+        
+        // Save current edit session to localStorage
+        function saveEditSession() {
+            if (isEditingMode && editingMonth && editingId) {
+                // Capture current form data
+                const formState = {
+                    weekNum: document.getElementById('weekNum').value,
+                    weekDate: document.getElementById('weekDate').value,
+                    workHours: document.getElementById('workHours').value,
+                    monthSelect: document.getElementById('monthSelect').value,
+                    pairs: []
+                };
+                
+                document.querySelectorAll('.td-pair-group').forEach(group => {
+                    const title = group.querySelector('.pair-title')?.value || '';
+                    const description = group.querySelector('.pair-desc')?.value || '';
+                    const days = group.querySelector('.pair-days')?.value || '';
+                    const hours = group.querySelector('.pair-hours')?.value || '';
+                    let images = [];
+                    const hiddenBase = group.querySelector('.pair-base64');
+                    if (hiddenBase) {
+                        try { images = JSON.parse(hiddenBase.value); } catch(e) { images = []; }
+                    }
+                    formState.pairs.push({ title, description, days, hours, images });
+                });
+                
+                const sessionData = {
+                    isEditing: true,
+                    editingMonth: editingMonth,
+                    editingId: editingId,
+                    formState: formState,
+                    originalData: editingOriginalData
+                };
+                localStorage.setItem('icca_edit_session', JSON.stringify(sessionData));
+            } else {
+                localStorage.removeItem('icca_edit_session');
+            }
+        }
+        
+        // Restore edit session after page refresh
+        function restoreEditSession() {
+            const saved = localStorage.getItem('icca_edit_session');
+            if (!saved) return false;
+            
+            try {
+                const session = JSON.parse(saved);
+                if (session.isEditing && session.editingMonth && session.editingId && session.formState) {
+                    isEditingMode = true;
+                    editingMonth = session.editingMonth;
+                    editingId = session.editingId;
+                    editingOriginalData = session.originalData;
+                    
+                    // Restore form fields
+                    document.getElementById('weekNum').value = session.formState.weekNum || '';
+                    document.getElementById('weekDate').value = session.formState.weekDate || '';
+                    document.getElementById('workHours').value = session.formState.workHours || '';
+                    document.getElementById('monthSelect').value = session.formState.monthSelect || 'february';
+                    
+                    // Rebuild pairs
+                    const container = document.getElementById('pairsContainer');
+                    container.innerHTML = '';
+                    pairCounter = 0;
+                    
+                    if (session.formState.pairs && session.formState.pairs.length) {
+                        session.formState.pairs.forEach(pairData => {
+                            addNewPairWithData(pairData);
+                        });
+                    } else {
+                        addNewPair();
+                    }
+                    
+                    updateEditBanner();
+                    return true;
+                }
+            } catch(e) { console.error("Restore error", e); }
+            return false;
+        }
+        
+        function clearEditSession() {
+            localStorage.removeItem('icca_edit_session');
+            isEditingMode = false;
+            editingMonth = null;
+            editingId = null;
+            editingOriginalData = null;
+            updateEditBanner();
+        }
+        
+        function updateEditBanner() {
+            const bannerDiv = document.getElementById('editBanner');
+            if (isEditingMode && editingMonth && editingId) {
+                bannerDiv.innerHTML = `
+                    <div class="edit-mode-banner">
+                        <span>✏️ EDITING MODE: You are editing entry from ${editingMonth.toUpperCase()} (ID: ${editingId})</span>
+                        <button class="cancel-edit-btn" onclick="cancelEdit()">Cancel Edit</button>
+                    </div>
+                `;
+            } else {
+                bannerDiv.innerHTML = '';
+            }
+        }
+        
+        function cancelEdit() {
+            if (confirm("Cancel editing? Any unsaved changes will be lost.")) {
+                // Restore the original entry back to storage if it was removed
+                if (editingOriginalData && editingMonth && editingId) {
+                    let data = JSON.parse(localStorage.getItem('ojtBlogData')) || { february: [], march: [], april: [], may: [] };
+                    // Check if entry already exists (maybe not, because we removed it)
+                    const exists = data[editingMonth]?.some(e => e.id === editingId);
+                    if (!exists && editingOriginalData) {
+                        data[editingMonth].push(editingOriginalData);
+                        localStorage.setItem('ojtBlogData', JSON.stringify(data));
+                    }
+                }
+                clearEditSession();
+                resetFormToEmpty();
+                displayEntries();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        // Render preview with remove buttons
+        function renderPreviewWithRemove(container, imagesArray, hiddenInput) {
+            if (!container) return;
+            container.innerHTML = '';
+            imagesArray.forEach((imgSrc, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-item';
+                wrapper.style.position = 'relative';
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '✕';
+                removeBtn.className = 'remove-img-btn';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
 
+                    imagesArray.splice(idx, 1);
+
+                    hiddenInput.value = JSON.stringify(imagesArray);
+
+                    renderPreviewWithRemove(container, imagesArray, hiddenInput);
+
+                    saveEditSession();
+                };
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                container.appendChild(wrapper);
+            });
+        }
+        
         function addNewPair() {
-            const pairId = Date.now() + Math.random();
-            const container = document.getElementById('pairsContainer');
-            const pairDiv = document.createElement('div');
-            pairDiv.className = 'td-pair-group';
-            pairDiv.dataset.pairId = pairId;
-            pairDiv.innerHTML = `
+            const id = pairCounter++;
+            const div = document.createElement('div');
+            div.className = 'td-pair-group';
+            div.setAttribute('data-pair-id', id);
+            div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <b style="font-size:12px; color:var(--primary)">Accomplishment ${container.children.length + 1}</b>
-                    <span style="color:var(--danger); cursor:pointer; font-weight:bold" onclick="this.parentElement.parentElement.remove()">✕</span>
+                    <b style="font-size:12px; color:var(--primary)">Entry ${id + 1}</b>
+                    <span style="color:var(--danger); cursor:pointer; font-weight:bold" onclick="this.parentElement.parentElement.remove(); saveEditSession()">✕</span>
                 </div>
                 <input type="text" class="pair-title" placeholder="Title (e.g. Onsite Accomplishment)" style="margin-bottom:10px;">
                 <textarea class="pair-desc" placeholder="What did you do?" style="margin-bottom:10px; height: 80px;"></textarea>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <div>
-                        <label style="font-size:10px; color:var(--gray);">DAYS PRESENT</label>
-                        <input type="number" class="pair-days" placeholder="e.g., 2" step="0.5">
+                        <label style="font-size:10px; color:var(--gray); font-weight:600; display:block; margin-bottom:4px;">DAYS PRESENT</label>
+                        <input type="text" class="pair-days" placeholder="e.g. 02" 
+                            style="width:100%; padding:10px 12px; border:2px solid #eef2f6; border-radius:10px; font-size:13px; outline:none;">
                     </div>
                     <div>
-                        <label style="font-size:10px; color:var(--gray);">WORK HOURS</label>
-                        <input type="number" class="pair-hours" placeholder="e.g., 8" step="0.5">
+                        <label style="font-size:10px; color:var(--gray); font-weight:600; display:block; margin-bottom:4px;">WORK HOURS</label>
+                        <input type="text" class="pair-hours" placeholder="e.g. 08" 
+                            style="width:100%; padding:10px 12px; border:2px solid #eef2f6; border-radius:10px; font-size:13px; outline:none;">
                     </div>
                 </div>
                 <label style="font-size:10px;">Upload Photo:</label>
                 <input type="file" class="pair-file-input" accept="image/*" multiple onchange="handleFileSelect(this)">
                 <div class="img-preview-box preview-gallery"></div>
             `;
-            container.appendChild(pairDiv);
-            currentImagesData.set(pairId, []);
-        }
-
-        async function handleFileSelect(input) {
-            const files = Array.from(input.files);
-            const pairDiv = input.closest('.td-pair-group');
-            const pairId = pairDiv.dataset.pairId;
-            const previewBox = pairDiv.querySelector('.preview-gallery');
+            document.getElementById('pairsContainer').appendChild(div);
             
-            for (const file of files) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
-                const filePath = `cms_images/${fileName}`;
-                
-                const { error: uploadError } = await supabase.storage
-                    .from('ojt-images')
-                    .upload(filePath, file);
-                
-                if (uploadError) {
-                    console.error('Upload error:', uploadError);
-                    alert('Failed to upload image: ' + uploadError.message);
-                    continue;
-                }
-                
-                const { data: urlData } = supabase.storage
-                    .from('ojt-images')
-                    .getPublicUrl(filePath);
-                
-                const imageUrl = urlData.publicUrl;
-                
-                // Store in temp map
-                const currentImages = currentImagesData.get(pairId) || [];
-                currentImages.push(imageUrl);
-                currentImagesData.set(pairId, currentImages);
-                
-                // Add preview
-                const wrapper = document.createElement('div');
-                wrapper.className = 'preview-item';
-                wrapper.innerHTML = `
-                    <img src="${imageUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">
-                    <button class="remove-img-btn" onclick="removeTempImage(this, '${pairId}', '${imageUrl}')">✕</button>
-                `;
-                previewBox.appendChild(wrapper);
-            }
-            input.value = '';
+            // Add input listeners to auto-save edit session
+            const inputs = div.querySelectorAll('input, textarea');
+            inputs.forEach(inp => inp.addEventListener('input', () => saveEditSession()));
+            return div;
         }
         
-        function removeTempImage(btn, pairId, imageUrl) {
-            const images = currentImagesData.get(pairId) || [];
-            const index = images.indexOf(imageUrl);
-            if (index > -1) images.splice(index, 1);
-            currentImagesData.set(pairId, images);
-            btn.closest('.preview-item').remove();
+        function addNewPairWithData(prefillData) {
+            const div = addNewPair(); // creates empty pair
+            const titleInput = div.querySelector('.pair-title');
+            const descInput = div.querySelector('.pair-desc');
+            const daysInput = div.querySelector('.pair-days');
+            const hoursInput = div.querySelector('.pair-hours');
+            const hiddenBase = div.querySelector('.pair-base64');
+            const previewContainer = div.querySelector('.preview-gallery');
+            
+            if (titleInput) titleInput.value = prefillData.title || '';
+            if (descInput) descInput.value = prefillData.description || '';
+            if (daysInput) daysInput.value = prefillData.days || '';
+            if (hoursInput) hoursInput.value = prefillData.hours || '';
+            
+            const imagesArr = prefillData.images || [];
+            if (hiddenBase) hiddenBase.value = JSON.stringify(imagesArr);
+            if (previewContainer && imagesArr.length) {
+                renderPreviewWithRemove(previewContainer, imagesArr, hiddenBase);
+            }
+            return div;
         }
+        
+        async function handleFileSelect(input) {
+  const files = Array.from(input.files);
+  const previewBox = input.parentElement.querySelector('.preview-gallery');
+  input.value = '';
 
-        async function saveContent() {
+  for (const file of files) {
+    const path = `temp/${Date.now()}_${file.name}`;
+
+    const { data, error } = await supabaseClient.storage
+      .from('ojt-images')
+      .upload(path, file);
+
+    if (error) {
+      alert("Upload failed");
+      continue;
+    }
+
+    const { data: url } = supabaseClient.storage
+      .from('ojt-images')
+      .getPublicUrl(data.path);
+
+    // preview only
+    const img = document.createElement("img");
+    img.src = url.publicUrl;
+    img.style.height = "80px";
+    img.style.borderRadius = "8px";
+    previewBox.appendChild(img);
+
+    // save URL ONLY
+    input.dataset.images = JSON.stringify([
+      ...(JSON.parse(input.dataset.images || "[]")),
+      url.publicUrl
+    ]);
+  }
+}
+        
+        function compressImage(file, maxSize, quality, callback) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL("image/jpeg", quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function saveContent() {
             const month = document.getElementById('monthSelect').value;
             const week = document.getElementById('weekNum').value.trim();
             const date = document.getElementById('weekDate').value.trim();
+            const totalHours = document.getElementById('workHours').value.trim();
             
             if (!week) {
-                alert("Please enter Week");
+                alert("Lagyan mo ng Week");
                 return;
             }
             
             const pairs = [];
-            const pairDivs = document.querySelectorAll('.td-pair-group');
+            let hasValid = false;
+            const allGroups = document.querySelectorAll('.td-pair-group');
             
-            for (const pairDiv of pairDivs) {
-                const title = pairDiv.querySelector('.pair-title').value.trim();
-                if (!title) continue;
+            for (let group of allGroups) {
+                const title = group.querySelector('.pair-title').value.trim();
+                const description = group.querySelector('.pair-desc').value.trim();
+                const days = group.querySelector('.pair-days').value.trim();
+                const hours = group.querySelector('.pair-hours').value.trim();
+                const imagesRaw = group.querySelector('.pair-base64').value;
+                let images = [];
+                try { images = JSON.parse(imagesRaw || "[]"); } catch(e) { images = []; }
                 
-                const description = pairDiv.querySelector('.pair-desc').value.trim();
-                const days = parseFloat(pairDiv.querySelector('.pair-days').value) || 0;
-                const hours = parseFloat(pairDiv.querySelector('.pair-hours').value) || 0;
-                const pairId = pairDiv.dataset.pairId;
-                const images = currentImagesData.get(pairId) || [];
-                
-                pairs.push({ title, description, days, hours, images });
+                if (title) {
+                    hasValid = true;
+                    pairs.push({ title, description, days, hours, images });
+                }
             }
             
-            if (pairs.length === 0) {
-                alert("Add at least one accomplishment");
+            if (!hasValid) {
+                alert("Lagyan mo kahit isang accomplishment na may title");
                 return;
             }
             
-            const totalHours = pairs.reduce((sum, p) => sum + p.hours, 0);
+            const newEntry = { id: Date.now(), week, date, totalHours, pairs };
+            let data = JSON.parse(localStorage.getItem('ojtBlogData')) || { february: [], march: [], april: [], may: [] };
+            
+            if (isEditingMode && editingMonth && editingId) {
+                // Remove old entry if exists
+                if (data[editingMonth]) {
+                    data[editingMonth] = data[editingMonth].filter(entry => entry.id !== editingId);
+                }
+                data[month].push(newEntry);
+                clearEditSession();
+                alert("Entry updated successfully!");
+            } else {
+                data[month].push(newEntry);
+                alert("Published Successfully!");
+            }
             
             try {
-                if (isEditingMode && editingEntryId) {
-                    // UPDATE existing entry
-                    const { error: updateError } = await supabase
-                        .from('ojt_entries')
-                        .update({
-                            week: week,
-                            date: date,
-                            total_hours: totalHours,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', editingEntryId);
-                    
-                    if (updateError) throw updateError;
-                    
-                    // Delete old accomplishments and images
-                    const { data: oldAccomps } = await supabase
-                        .from('ojt_accomplishments')
-                        .select('id')
-                        .eq('entry_id', editingEntryId);
-                    
-                    if (oldAccomps) {
-                        for (const acc of oldAccomps) {
-                            await supabase.from('ojt_images').delete().eq('accomplishment_id', acc.id);
-                        }
-                        await supabase.from('ojt_accomplishments').delete().eq('entry_id', editingEntryId);
-                    }
-                    
-                    // Insert new accomplishments
-                    for (const pair of pairs) {
-                        const { data: accData, error: accError } = await supabase
-                            .from('ojt_accomplishments')
-                            .insert({
-                                entry_id: editingEntryId,
-                                title: pair.title,
-                                description: pair.description,
-                                days: pair.days,
-                                hours: pair.hours
-                            })
-                            .select()
-                            .single();
-                        
-                        if (accError) throw accError;
-                        
-                        for (const imgUrl of pair.images) {
-                            await supabase.from('ojt_images').insert({
-                                accomplishment_id: accData.id,
-                                image_url: imgUrl
-                            });
-                        }
-                    }
-                    
-                    alert("Entry updated successfully!");
-                } else {
-                    // INSERT new entry
-                    const { data: entryData, error: entryError } = await supabase
-                        .from('ojt_entries')
-                        .insert({
-                            month: month,
-                            week: week,
-                            date: date,
-                            total_hours: totalHours
-                        })
-                        .select()
-                        .single();
-                    
-                    if (entryError) throw entryError;
-                    
-                    for (const pair of pairs) {
-                        const { data: accData, error: accError } = await supabase
-                            .from('ojt_accomplishments')
-                            .insert({
-                                entry_id: entryData.id,
-                                title: pair.title,
-                                description: pair.description,
-                                days: pair.days,
-                                hours: pair.hours
-                            })
-                            .select()
-                            .single();
-                        
-                        if (accError) throw accError;
-                        
-                        for (const imgUrl of pair.images) {
-                            await supabase.from('ojt_images').insert({
-                                accomplishment_id: accData.id,
-                                image_url: imgUrl
-                            });
-                        }
-                    }
-                    
-                    alert("Published successfully!");
+    localStorage.setItem('ojtBlogData', JSON.stringify(data));
+
+    // ===================== NEW: SAVE TO SUPABASE =====================
+    (async () => {
+        try {
+            const month = document.getElementById('monthSelect').value;
+
+            const { data: entryRow, error: entryErr } =
+                await supabaseClient.from('ojt_entries')
+                .insert({
+                    month: month,
+                    week: newEntry.week,
+                    date: newEntry.date,
+                    total_hours: newEntry.totalHours
+                })
+                .select()
+                .single();
+
+            if (entryErr) throw entryErr;
+
+            for (const pair of newEntry.pairs) {
+                const { data: accRow, error: accErr } =
+                    await supabaseClient.from('ojt_accomplishments')
+                    .insert({
+                        entry_id: entryRow.id,
+                        title: pair.title,
+                        description: pair.description,
+                        days: pair.days,
+                        hours: pair.hours
+                    })
+                    .select()
+                    .single();
+
+                if (accErr) throw accErr;
+
+                for (const img64 of pair.images || []) {
+                    const file = base64ToFile(img64, `${Date.now()}.jpg`);
+                    const path = `${month}/${newEntry.week}/${Date.now()}.jpg`;
+
+                    const { data: uploadData, error: uploadErr } =
+                        await supabaseClient.storage
+                            .from('ojt-images')
+                            .upload(path, file);
+
+                    if (uploadErr) throw uploadErr;
+
+                    const { data: urlData } =
+                        supabaseClient.storage
+                            .from('ojt-images')
+                            .getPublicUrl(uploadData.path);
+
+                    await supabaseClient.from('ojt_images').insert({
+                        accomplishment_id: accRow.id,
+                        image_url: urlData.publicUrl
+                    });
                 }
-                
-                resetForm();
-                await loadEntries();
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                alert("Error saving: " + error.message);
             }
+
+        } catch (dbErr) {
+            console.error("Supabase save failed:", dbErr);
+            alert("⚠️ Saved locally but failed to sync to Supabase");
+        }
+    })();
+
+    resetFormToEmpty();
+    displayEntries();
+
+} catch (e) {
+    alert("Storage limit reached. Bawasan images.");
+}
         }
         
-        async function loadEntries() {
-            const container = document.getElementById('contentList');
-            container.innerHTML = '<div class="loading-spinner">Loading entries from Supabase...</div>';
-            
-            try {
-                const { data: entries, error } = await supabase
-                    .from('ojt_entries')
-                    .select(`
-                        *,
-                        ojt_accomplishments (
-                            *,
-                            ojt_images (*)
-                        )
-                    `)
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                if (!entries || entries.length === 0) {
-                    container.innerHTML = '<div class="empty-state">No entries yet. Create your first entry!</div>';
-                    return;
-                }
-                
-                let html = '';
-                for (const entry of entries) {
-                    const accomplishments = entry.ojt_accomplishments || [];
-                    const firstImages = [];
-                    let daysList = new Set();
-                    let totalPairHours = 0;
-                    
-                    for (const acc of accomplishments) {
-                        if (acc.days) daysList.add(acc.days);
-                        totalPairHours += acc.hours || 0;
-                        const images = acc.ojt_images || [];
-                        if (images.length && firstImages.length < 3) {
-                            firstImages.push(...images.slice(0, 3 - firstImages.length));
+        function resetFormToEmpty() {
+            document.getElementById('weekNum').value = '';
+            document.getElementById('weekDate').value = '';
+            document.getElementById('workHours').value = '';
+            document.getElementById('monthSelect').value = 'february';
+            document.getElementById('pairsContainer').innerHTML = '';
+            pairCounter = 0;
+            addNewPair();
+            isEditingMode = false;
+            editingMonth = null;
+            editingId = null;
+            editingOriginalData = null;
+            clearEditSession();
+            updateEditBanner();
+        }
+        
+        function displayEntries() {
+            const data = JSON.parse(localStorage.getItem('ojtBlogData')) || {};
+            let html = '';
+            for (let m in data) {
+                if (data[m].length === 0) continue;
+                data[m].forEach(item => {
+                    let imgs = '';
+                    let daysPresentList = '';
+                    let imgCount = 0;
+                    item.pairs.forEach(pair => {
+                        if (pair.days && pair.days.trim()) {
+                            daysPresentList += `<span class="days-badge">📆 ${pair.days}d</span> `;
                         }
-                    }
-                    
-                    const daysBadges = Array.from(daysList).map(d => 
-                        `<span class="days-badge">📆 ${d}d</span>`
-                    ).join('');
-                    
+                        if (pair.images && pair.images.length && imgCount < 3) {
+                            pair.images.forEach(img => {
+                                if (imgCount < 3) {
+                                    imgs += `<img src="${img}" class="preview-mini-img">`;
+                                    imgCount++;
+                                }
+                            });
+                        }
+                    });
                     html += `
                         <div class="entry-item">
                             <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                                    ${firstImages.length ? firstImages.map(img => 
-                                        `<img src="${img.image_url}" class="preview-mini-img" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">`
-                                    ).join('') : '<div style="width:50px;height:50px;background:#eef2f6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;">📷</div>'}
+                                    ${imgs || '<div style="width:50px;height:50px;background:#eef2f6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:gray;">📷</div>'}
                                 </div>
                                 <div>
-                                    <b style="color:var(--primary); font-size:14px;">${entry.month?.toUpperCase() || ''} | ${entry.week}</b>
-                                    ${entry.date ? `<div style="font-size:11px; color:var(--gray);">${escapeHtml(entry.date)}</div>` : ''}
-                                    <div style="margin-top: 5px;">${daysBadges || '<span class="days-badge">✨ days present</span>'}</div>
-                                    <small style="color:var(--gray)">${accomplishments.length} accomplishments</small>
+                                    <b style="color:var(--primary); font-size:14px;">${m.toUpperCase()} | ${item.week}</b>
+                                    ${item.date ? `<div style="font-size:11px; color:var(--gray);">${item.date}</div>` : ''}
+                                    <div style="margin-top: 5px;">${daysPresentList || '<span class="days-badge">✨ days present</span>'}</div>
+                                    <small style="color:var(--gray)">${item.pairs.length} accomplishments</small>
                                 </div>
                             </div>
                             <div style="display:flex; gap:8px; align-items:center;">
-                                <button class="action-btn edit-btn" onclick="editEntry('${entry.id}')" title="Edit">
+                                <button class="action-btn edit-btn" onclick="editEntry('${m}', ${item.id})" title="Edit">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                                         <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                         <path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                                     </svg>
                                 </button>
-                                <button class="action-btn delete-btn" onclick="deleteEntry('${entry.id}')" title="Delete">
+                                <button class="action-btn delete-btn" onclick="deleteEntry('${m}', ${item.id})" title="Delete">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                                         <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                         <path d="M8 6V4h8v2" stroke="currentColor" stroke-width="2"/>
@@ -559,167 +740,213 @@
                             </div>
                         </div>
                     `;
-                }
-                container.innerHTML = html;
-            } catch (error) {
-                console.error('Load error:', error);
-                container.innerHTML = '<div class="empty-state">Error loading entries: ' + error.message + '</div>';
+                });
             }
+            document.getElementById('contentList').innerHTML = html || '<p style="text-align:center;color:var(--gray);">Empty list.</p>';
         }
         
-        async function editEntry(entryId) {
-            try {
-                const { data: entry, error } = await supabase
-                    .from('ojt_entries')
-                    .select(`
-                        *,
-                        ojt_accomplishments (
-                            *,
-                            ojt_images (*)
-                        )
-                    `)
-                    .eq('id', entryId)
-                    .single();
-                
-                if (error) throw error;
-                
-                isEditingMode = true;
-                editingEntryId = entryId;
-                
-                document.getElementById('monthSelect').value = entry.month;
-                document.getElementById('weekNum').value = entry.week;
-                document.getElementById('weekDate').value = entry.date || '';
-                
-                document.getElementById('pairsContainer').innerHTML = '';
-                currentImagesData.clear();
-                
-                const accomplishments = entry.ojt_accomplishments || [];
-                for (const acc of accomplishments) {
-                    const pairId = Date.now() + Math.random();
-                    const pairDiv = document.createElement('div');
-                    pairDiv.className = 'td-pair-group';
-                    pairDiv.dataset.pairId = pairId;
-                    
-                    const images = (acc.ojt_images || []).map(img => img.image_url);
-                    currentImagesData.set(pairId, images);
-                    
-                    let previewHtml = '';
-                    for (const imgUrl of images) {
-                        previewHtml += `
-                            <div class="preview-item">
-                                <img src="${imgUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">
-                                <button class="remove-img-btn" onclick="removeTempImage(this, '${pairId}', '${imgUrl}')">✕</button>
-                            </div>
-                        `;
+        window.deleteEntry = (m, id) => {
+            if(confirm("Delete this entry?")) {
+                let data = JSON.parse(localStorage.getItem('ojtBlogData'));
+                if(data[m]) {
+                    data[m] = data[m].filter(i => i.id !== id);
+                    localStorage.setItem('ojtBlogData', JSON.stringify(data));
+                    displayEntries();
+                    if (isEditingMode && editingId === id && editingMonth === m) {
+                        cancelEdit();
                     }
-                    
-                    pairDiv.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <b style="font-size:12px; color:var(--primary)">Accomplishment</b>
-                            <span style="color:var(--danger); cursor:pointer; font-weight:bold" onclick="this.parentElement.parentElement.remove()">✕</span>
-                        </div>
-                        <input type="text" class="pair-title" value="${escapeHtml(acc.title)}" style="margin-bottom:10px;">
-                        <textarea class="pair-desc" style="margin-bottom:10px; height: 80px;">${escapeHtml(acc.description || '')}</textarea>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                            <div>
-                                <label style="font-size:10px; color:var(--gray);">DAYS PRESENT</label>
-                                <input type="number" class="pair-days" value="${acc.days || 0}" step="0.5">
-                            </div>
-                            <div>
-                                <label style="font-size:10px; color:var(--gray);">WORK HOURS</label>
-                                <input type="number" class="pair-hours" value="${acc.hours || 0}" step="0.5">
-                            </div>
-                        </div>
-                        <label style="font-size:10px;">Upload Photo:</label>
-                        <input type="file" class="pair-file-input" accept="image/*" multiple onchange="handleFileSelect(this)">
-                        <div class="img-preview-box preview-gallery">${previewHtml}</div>
-                    `;
-                    document.getElementById('pairsContainer').appendChild(pairDiv);
                 }
-                
-                document.getElementById('editBanner').innerHTML = `
-                    <div class="edit-mode-banner">
-                        <span>✏️ EDITING MODE: Editing ${entry.month?.toUpperCase()} - ${entry.week}</span>
-                        <button class="cancel-edit-btn" onclick="cancelEdit()">Cancel Edit</button>
-                    </div>
-                `;
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-            } catch (error) {
-                console.error('Edit error:', error);
-                alert("Error loading entry for editing: " + error.message);
             }
-        }
+        };
         
-        async function deleteEntry(entryId) {
-            if (!confirm("Delete this entry permanently?")) return;
+        window.editEntry = (month, id) => {
+            const data = JSON.parse(localStorage.getItem('ojtBlogData'));
+            if (!data[month]) return;
+            const entry = data[month].find(i => i.id === id);
+            if (!entry) return;
             
-            try {
-                // Get accomplishments first to delete their images
-                const { data: accomplishments } = await supabase
-                    .from('ojt_accomplishments')
-                    .select('id')
-                    .eq('entry_id', entryId);
-                
-                if (accomplishments) {
-                    for (const acc of accomplishments) {
-                        await supabase.from('ojt_images').delete().eq('accomplishment_id', acc.id);
-                    }
-                    await supabase.from('ojt_accomplishments').delete().eq('entry_id', entryId);
+            // Store original data for potential cancel
+            editingOriginalData = JSON.parse(JSON.stringify(entry));
+            
+            // Fill main form
+            document.getElementById('weekNum').value = entry.week || '';
+            document.getElementById('weekDate').value = entry.date || '';
+            document.getElementById('workHours').value = entry.totalHours || '';
+            document.getElementById('monthSelect').value = month;
+            
+            // Clear and rebuild pairs
+            const container = document.getElementById('pairsContainer');
+            container.innerHTML = '';
+            pairCounter = 0;
+            
+            if (entry.pairs && entry.pairs.length) {
+                entry.pairs.forEach(pairItem => {
+                    addNewPairWithData(pairItem);
+                });
+            } else {
+                addNewPair();
+            }
+            
+            isEditingMode = true;
+            editingMonth = month;
+            editingId = id;
+            
+            // Remove the old entry from storage temporarily (will be replaced on save)
+            data[month] = data[month].filter(i => i.id !== id);
+            localStorage.setItem('ojtBlogData', JSON.stringify(data));
+            
+            // Save edit session so refresh works
+            saveEditSession();
+            updateEditBanner();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        // Set up auto-save for all form inputs
+        function attachAutoSave() {
+            const inputs = ['weekNum', 'weekDate', 'workHours', 'monthSelect'];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => saveEditSession());
+                    el.addEventListener('change', () => saveEditSession());
                 }
-                
-                await supabase.from('ojt_entries').delete().eq('id', entryId);
-                
-                if (isEditingMode && editingEntryId === entryId) {
-                    cancelEdit();
-                }
-                
-                await loadEntries();
-                alert("Entry deleted successfully!");
-                
-            } catch (error) {
-                console.error('Delete error:', error);
-                alert("Error deleting: " + error.message);
+            });
+            
+            // Monitor pairs container for changes
+            const observer = new MutationObserver(() => saveEditSession());
+            const container = document.getElementById('pairsContainer');
+            if (container) {
+                observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
             }
         }
         
-        function cancelEdit() {
-            isEditingMode = false;
-            editingEntryId = null;
-            resetForm();
-            document.getElementById('editBanner').innerHTML = '';
+        let pairCounter = 0;
+        
+        window.onload = () => {
+            const restored = restoreEditSession();
+            if (!restored) {
+                document.getElementById('pairsContainer').innerHTML = '';
+                pairCounter = 0;
+                addNewPair();
+            }
+            displayEntries();
+            attachAutoSave();
+            updateEditBanner();
+        };
+
+/* ================= SAFE MIGRATION (FIXED) ================= */
+
+function base64ToFile(base64, filename) {
+  const arr = base64.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
+}
+
+async function migrateToSupabase() {
+  if (!confirm("⚠️ This will upload ALL local data to Supabase.\nExisting Supabase data may duplicate.\nProceed?")) {
+    return;
+  }
+
+  const data = JSON.parse(localStorage.getItem('ojtBlogData'));
+  if (!data) {
+    alert("No local data found.");
+    return;
+  }
+
+  let totalEntries = 0;
+  let totalAccomplishments = 0;
+  let totalImages = 0;
+
+  for (const month in data) {
+    for (const entry of data[month]) {
+      totalEntries++;
+      
+      // 1️⃣ INSERT ENTRY
+      const { data: entryRow, error: entryErr } =
+        await supabaseClient.from('ojt_entries')
+        .insert({
+          month: month,
+          week: entry.week,
+          date: entry.date || null,
+          total_hours: entry.totalHours || null,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (entryErr) {
+        console.error("Entry error:", entryErr);
+        throw new Error(`Entry insert failed: ${entryErr.message}`);
+      }
+
+      // 2️⃣ ACCOMPLISHMENTS
+      for (const pair of entry.pairs) {
+        totalAccomplishments++;
+        
+        const { data: accRow, error: accErr } =
+          await supabaseClient.from('ojt_accomplishments')
+          .insert({
+            entry_id: entryRow.id,
+            title: pair.title,
+            description: pair.description || "",
+            days: pair.days || null,
+            hours: pair.hours || null
+          })
+          .select()
+          .single();
+
+        if (accErr) {
+          console.error("Accomplishment error:", accErr);
+          throw new Error(`Accomplishment insert failed: ${accErr.message}`);
         }
-        
-        function resetForm() {
-            document.getElementById('weekNum').value = '';
-            document.getElementById('weekDate').value = '';
-            document.getElementById('monthSelect').value = 'february';
-            document.getElementById('pairsContainer').innerHTML = '';
-            currentImagesData.clear();
-            addNewPair(); // Add one empty pair
+
+        // 3️⃣ IMAGES
+        const images = pair.images || [];
+        for (let i = 0; i < images.length; i++) {
+          totalImages++;
+          const img64 = images[i];
+          
+          try {
+            const file = base64ToFile(img64, `${Date.now()}_${i}.jpg`);
+            const path = `${month}/${entry.week || 'week'}/${Date.now()}_${i}.jpg`;
+
+            const { data: uploadData, error: uploadErr } =
+              await supabaseClient.storage
+                .from('ojt-images')
+                .upload(path, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
+
+            if (uploadErr) throw uploadErr;
+
+            const { data: publicUrlData } =
+              supabaseClient.storage
+                .from('ojt-images')
+                .getPublicUrl(uploadData.path);
+
+            await supabaseClient.from('ojt_images').insert({
+              accomplishment_id: accRow.id,
+              image_url: publicUrlData.publicUrl
+            });
+            
+          } catch (imgErr) {
+            console.error("Image upload error:", imgErr);
+            // Continue with other images, don't fail entire migration
+            alert(`Warning: One image failed to upload: ${imgErr.message}`);
+          }
         }
+      }
+    }
+  }
+
+  alert(`✅ MIGRATION COMPLETE!\n\n📊 Summary:\n- Entries: ${totalEntries}\n- Accomplishments: ${totalAccomplishments}\n- Images: ${totalImages}\n\nAll data is now in Supabase!`);
+}
         
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, m => 
-                m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'
-            );
-        }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            resetForm();
-            loadEntries();
-        });
-        
-        window.addNewPair = addNewPair;
-        window.saveContent = saveContent;
-        window.editEntry = editEntry;
-        window.deleteEntry = deleteEntry;
-        window.cancelEdit = cancelEdit;
-        window.handleFileSelect = handleFileSelect;
-        window.removeTempImage = removeTempImage;
-    </script>
+</script>
 </body>
 </html>
