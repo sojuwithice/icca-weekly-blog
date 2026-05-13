@@ -463,6 +463,7 @@
                 <label style="font-size:10px;">Upload Photo:</label>
                 <input type="file" class="pair-file-input" accept="image/*" multiple onchange="handleFileSelect(this)">
                 <div class="img-preview-box preview-gallery"></div>
+                <input type="hidden" class="pair-base64" value="[]">
             `;
             document.getElementById('pairsContainer').appendChild(div);
             
