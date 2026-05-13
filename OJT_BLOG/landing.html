@@ -75,7 +75,43 @@
 </div>
 
 
-    <script>
+   <script>
+/* ===============================
+   HARDCODED MAY DATA (DISPLAY-ONLY)
+================================ */
+const HARDCODED_MAY = [
+    {
+        week: "Week 15",
+        date: "May 20–24, 2025",
+        pairs: [
+            {
+                title: "System Final Presentation and Turnover",
+                description: "Presented the completed system to the mentor, explained the system workflow, core features, and deployment process. Conducted system turnover and addressed final clarifications.",
+                days: 5,
+                hours: 40,
+                images: [
+                    "https://your-image-url-1.jpg",
+                    "https://your-image-url-2.jpg"
+                ]
+            }
+        ]
+    },
+    {
+        week: "Week 16",
+        date: "May 27–31, 2025",
+        pairs: [
+            {
+                title: "Final Documentation and System Refinement",
+                description: "Completed system documentation, performed final UI refinements, fixed minor bugs, and ensured the system was ready for submission.",
+                days: 3,
+                hours: 24,
+                images: [
+                    "https://your-image-url-3.jpg"
+                ]
+            }
+        ]
+    }
+];
 /* ===============================
    HELPER: Fix decimal issues (clean numbers)
 ================================ */
@@ -101,22 +137,30 @@ function formatHoursDisplay(value) {
 ================================ */
 function showFolderContent(month) {
     const area = document.getElementById('blog-content-area');
-    const rawData = localStorage.getItem('ojtBlogData');
+    let data = [];
 
-    if (!rawData) {
-        area.innerHTML = `<p style="text-align:center;">Walang laman ito, teh.</p>`;
-        area.style.display = "block";
-        return;
+    /* ===== HANDLE MAY (HARDCODED) ===== */
+    if (month === 'may') {
+        data = HARDCODED_MAY;
+    } else {
+        const rawData = localStorage.getItem('ojtBlogData');
+
+        if (!rawData) {
+            area.innerHTML = `<p style="text-align:center;">Walang laman ito, teh.</p>`;
+            area.style.display = "block";
+            return;
+        }
+
+        const storedData = JSON.parse(rawData);
+        if (!storedData[month] || storedData[month].length === 0) {
+            area.innerHTML = `<p style="text-align:center;">waley pa laman hehe.</p>`;
+            area.style.display = "block";
+            return;
+        }
+
+        data = storedData[month];
     }
 
-    let storedData = JSON.parse(rawData);
-    if (!storedData[month] || storedData[month].length === 0) {
-        area.innerHTML = `<p style="text-align:center;">waley pa laman hehe.</p>`;
-        area.style.display = "block";
-        return;
-    }
-
-    const data = storedData[month];
     area.style.display = "block";
 
     let totalMonthHours = 0;
@@ -125,14 +169,12 @@ function showFolderContent(month) {
     data.forEach(item => {
         if (item.pairs && Array.isArray(item.pairs)) {
             item.pairs.forEach(pair => {
-                const h = parseFloat(pair.hours) || 0;
-                const d = parseFloat(pair.days) || 0;
-                totalMonthHours += h;
-                totalMonthDays += d;
+                totalMonthHours += parseFloat(pair.hours) || 0;
+                totalMonthDays += parseFloat(pair.days) || 0;
             });
         }
     });
-    
+
     totalMonthHours = cleanNumber(totalMonthHours);
     totalMonthDays = cleanNumber(totalMonthDays);
 
@@ -157,21 +199,21 @@ function showFolderContent(month) {
             <div class="week-content">
         `;
 
-        const pairs = item.pairs || [];
-        pairs.forEach((pair, index) => {
+        (item.pairs || []).forEach((pair, index) => {
             const reverse = index % 2 ? 'reverse' : '';
             const images = Array.isArray(pair.images) ? pair.images : [];
             const sliderId = `slider-${Math.random().toString(36).substr(2, 9)}`;
-            
-            const cleanDays = formatHoursDisplay(pair.days || '0');
-            const cleanHours = formatHoursDisplay(pair.hours || '0');
 
             html += `
                 <div class="accomplishment-card ${reverse}">
                     <div class="acc-img-container">
                         ${images.length ? `
-                            <div class="acc-slider" id="${sliderId}" data-images='${JSON.stringify(images)}' onclick='openModal(this.getAttribute("data-images"))'>
-                                ${images.map((img, i) => `<img src="${img}" class="slide ${i === 0 ? 'active' : ''}" onerror="this.src='placeholder.jpg'">`).join('')}
+                            <div class="acc-slider" id="${sliderId}" data-images='${JSON.stringify(images)}'
+                                 onclick='openModal(this.getAttribute("data-images"))'>
+                                ${images.map((img, i) =>
+                                    `<img src="${img}" class="slide ${i === 0 ? 'active' : ''}"
+                                          onerror="this.src='placeholder.jpg'">`
+                                ).join('')}
                             </div>
                         ` : `<img src="placeholder.jpg" class="acc-img">`}
                     </div>
@@ -180,9 +222,9 @@ function showFolderContent(month) {
                         <div class="acc-header">
                             <h3 class="acc-title">${escapeHtml(pair.title)}</h3>
                             <div class="work-hours-capsule">
-                                Days Present: <span class="hours-num">${cleanDays}</span>
+                                Days Present: <span class="hours-num">${formatHoursDisplay(pair.days)}</span>
                                 <span class="separator-bar">|</span>
-                                Total Hours: <span class="hours-num">${cleanHours}</span>
+                                Total Hours: <span class="hours-num">${formatHoursDisplay(pair.hours)}</span>
                             </div>
                         </div>
                         <p class="acc-desc">
@@ -191,8 +233,10 @@ function showFolderContent(month) {
                     </div>
                 </div>
             `;
+
             if (images.length > 1) setTimeout(() => initSlider(sliderId), 100);
         });
+
         html += `</div>`;
     });
 
@@ -312,40 +356,33 @@ function updateOverallProgress() {
     if (rawData) {
         const storedData = JSON.parse(rawData);
         for (const month in storedData) {
-            if (storedData[month] && Array.isArray(storedData[month])) {
-                storedData[month].forEach(week => {
-                    if (week.pairs && Array.isArray(week.pairs)) {
-                        week.pairs.forEach(pair => {
-                            totalHours += parseFloat(pair.hours) || 0;
-                        });
-                    }
+            storedData[month]?.forEach(week => {
+                week.pairs?.forEach(pair => {
+                    totalHours += parseFloat(pair.hours) || 0;
                 });
-            }
+            });
         }
     }
-    
-    let cleanTotalHours = cleanNumber(totalHours);
-    let percent = (cleanTotalHours / targetHours) * 100;
-    percent = Math.min(percent, 100);
-    let percentDisplay = Math.round(percent * 10) / 10;
-    
-    // Update ang width ng progress bar
+
+    // ✅ ADD HARDCODED MAY
+    HARDCODED_MAY.forEach(week => {
+        week.pairs.forEach(pair => {
+            totalHours += parseFloat(pair.hours) || 0;
+        });
+    });
+
+    const cleanTotalHours = cleanNumber(totalHours);
+    let percent = Math.min((cleanTotalHours / targetHours) * 100, 100);
+    const percentDisplay = Math.round(percent * 10) / 10;
+
     const progressFill = document.getElementById('main-progress-fill');
     progressFill.style.width = percent + "%";
-    
-    // Update ang text
-    document.getElementById('progress-text').innerText = `${cleanTotalHours} / ${targetHours} Hours (${percentDisplay}%)`;
-    
-    // IMPORTANTE: Tawagin para gumalaw ang star kasama ng progress bar
-    // Maghintay ng konti para matapos ang CSS transition
-    setTimeout(() => {
-        updateStarPosition();
-    }, 50);
-    
-    // Para siguradong tama ang position pagkatapos ng animation
-    setTimeout(() => {
-        updateStarPosition();
-    }, 850);
+
+    document.getElementById('progress-text')
+        .innerText = `${cleanTotalHours} / ${targetHours} Hours (${percentDisplay}%)`;
+
+    setTimeout(updateStarPosition, 50);
+    setTimeout(updateStarPosition, 850);
 }
 
 /* ===============================
