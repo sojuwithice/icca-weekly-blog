@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICCA Landing Page</title>
     <link rel="stylesheet" href="landing.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -75,12 +74,7 @@
     </div>
 </div>
 
-<script>
-  const supabaseClient = supabase.createClient(
-    "https://xtgbphcuzreotwuaiwyx.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0Z2JwaGN1enJlb3R3dWFpd3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NTUyODQsImV4cCI6MjA5NDAzMTI4NH0.59pNISn8T7RZULUjntEm7r4PNMx-2ke_bqhkqkEHR30"
-  );
-</script>
+
     <script>
 /* ===============================
    HELPER: Fix decimal issues (clean numbers)
@@ -391,77 +385,6 @@ window.refreshProgress = function() {
     updateOverallProgress();
 };
 
-async function loadEntries() {
-    const { data, error } = await supabaseClient
-        .from('ojt_entries')
-        .select(`
-            id,
-            month,
-            week,
-            date,
-            total_hours,
-            ojt_accomplishments (
-                id,
-                title,
-                description,
-                days,
-                hours,
-                ojt_images (
-                    image_url
-                )
-            )
-        `)
-        .order('id', { ascending: false });
-
-    if (error) {
-        console.error("Supabase error:", error);
-        return;
-    }
-
-    console.log("DATA FROM SUPABASE:", data);
-
-    renderEntries(data);
-}
-
-loadEntries();
-
-function renderEntries(data) {
-    const area = document.getElementById("blog-content-area");
-    area.style.display = "block";
-
-    let html = "";
-
-    data.forEach(entry => {
-        html += `
-            <div class="monthly-summary-container">
-                <h2>${entry.month.toUpperCase()} - ${entry.week}</h2>
-                <p>${entry.date || ""}</p>
-                <p>Total Hours: ${entry.total_hours}</p>
-            </div>
-        `;
-
-        html += `<div class="week-accordion">`;
-
-        entry.ojt_accomplishments.forEach(acc => {
-            let images = acc.ojt_images.map(img => 
-                `<img src="${img.image_url}" style="width:100px; margin:5px;">`
-            ).join("");
-
-            html += `
-                <div class="accomplishment-card">
-                    <h3>${acc.title}</h3>
-                    <p>${acc.description || ""}</p>
-                    <small>Days: ${acc.days} | Hours: ${acc.hours}</small>
-                    <div>${images}</div>
-                </div>
-            `;
-        });
-
-        html += `</div>`;
-    });
-
-    area.innerHTML = html;
-}
 
 </script>
 </body>
