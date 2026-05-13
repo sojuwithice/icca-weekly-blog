@@ -494,40 +494,43 @@
             return div;
         }
         
-        async function handleFileSelect(input) {
-  const files = Array.from(input.files);
-  const previewBox = input.parentElement.querySelector('.preview-gallery');
-  input.value = '';
+        function handleFileSelect(input) {
+    const files = Array.from(input.files);
 
-  for (const file of files) {
-    const path = `temp/${Date.now()}_${file.name}`;
+    const previewBox = input.parentElement.querySelector('.preview-gallery');
+    const hiddenInput = input.parentElement.querySelector('.pair-base64');
 
-    const { data, error } = await supabaseClient.storage
-      .from('ojt-images')
-      .upload(path, file);
+    if (!previewBox || !hiddenInput) return;
 
-    if (error) {
-      alert("Upload failed");
-      continue;
+    let storedImages = JSON.parse(hiddenInput.value || "[]");
+
+    if (storedImages.length + files.length > 5) {
+        alert("⚠️ Max 5 images per accomplishment");
+        input.value = '';
+        return;
     }
 
-    const { data: url } = supabaseClient.storage
-      .from('ojt-images')
-      .getPublicUrl(data.path);
+    let pending = files.length;
 
-    // preview only
-    const img = document.createElement("img");
-    img.src = url.publicUrl;
-    img.style.height = "80px";
-    img.style.borderRadius = "8px";
-    previewBox.appendChild(img);
+    files.forEach(file => {
+        if (!file.type.startsWith("image/")) {
+            pending--;
+            return;
+        }
 
-    // save URL ONLY
-    input.dataset.images = JSON.stringify([
-      ...(JSON.parse(input.dataset.images || "[]")),
-      url.publicUrl
-    ]);
-  }
+        compressImage(file, 900, 0.7, base64 => {
+            storedImages.push(base64);
+
+            hiddenInput.value = JSON.stringify(storedImages);
+
+            renderPreviewWithRemove(previewBox, storedImages, hiddenInput);
+
+            saveEditSession();
+
+            pending--;
+            if (pending === 0) input.value = '';
+        });
+    });
 }
         
         function compressImage(file, maxSize, quality, callback) {
@@ -946,8 +949,7 @@ async function migrateToSupabase() {
 
   alert(`✅ MIGRATION COMPLETE!\n\n📊 Summary:\n- Entries: ${totalEntries}\n- Accomplishments: ${totalAccomplishments}\n- Images: ${totalImages}\n\nAll data is now in Supabase!`);
 }
-       
-
+        
 </script>
 </body>
 </html>
