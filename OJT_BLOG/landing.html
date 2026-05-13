@@ -81,32 +81,48 @@
 ================================ */
 const HARDCODED_MAY = [
     {
-        week: "Week 15",
-        date: "May 20–24, 2025",
+        week: "Week 01",
+        date: "May 04–08",
         pairs: [
             {
-                title: "System Final Presentation and Turnover",
-                description: "Presented the completed system to the mentor, explained the system workflow, core features, and deployment process. Conducted system turnover and addressed final clarifications.",
-                days: 5,
-                hours: 40,
+                title: "Onsite Accomplishment",
+                description: "I focused mainly on clerical tasks assigned by the faculty staff, assisting in organizing and managing various documents and office-related work. During this period, I also started creating a blog, where we structured and prepared content to document activities and updates in a more organized and accessible format.",
+                days: 4,
+                hours: 41.2,
                 images: [
-                    "https://your-image-url-1.jpg",
-                    "https://your-image-url-2.jpg"
+                    "images/week1.jpeg",
+                    "images/week1.2.jpeg",
+                    "images/week1.3.jpeg",
+                    "images/week1.4.jpeg",
+                    "images/week1.5.jpg"
+                ]
+            },
+            {
+                title: "Work From Home Accomplishment",
+                description: "While working from home, I focused on finalizing the BU-ETEEAP system by polishing both the front-end and back-end components. This included fixing remaining issues, refining the user interface, ensuring all features were functioning properly, and preparing the system for final review and deployment.",
+                days: 1,
+                hours: 8,
+                images: [
+                    "images/wfh1.png",
+                    "images/wfh2.jpeg",
+                    "images/wfh3.jpeg"
                 ]
             }
         ]
     },
     {
-        week: "Week 16",
-        date: "May 27–31, 2025",
+        week: "Week 02",
+        date: "May 11–12",
         pairs: [
             {
-                title: "Final Documentation and System Refinement",
-                description: "Completed system documentation, performed final UI refinements, fixed minor bugs, and ensured the system was ready for submission.",
-                days: 3,
-                hours: 24,
+                title: "Onsite Accomplishment",
+                description: "During the last week of my OJT, I focused mainly on clerical tasks while finalizing the BU-ETEEAP system based on the requested revisions. After implementing the necessary improvements, the system was prepared and formally presented for final review. The completed system was then turned over to my mentor, ensuring proper orientation and understanding of its features. I also assisted in the backend implementation of the Theses/Dissertation module to help ensure accurate data handling and smooth system functionality.",
+                days: 2,
+                hours: 19.93,
                 images: [
-                    "https://your-image-url-3.jpg"
+                    "images/week2.jpeg",
+                    "images/week2.2.jpeg",
+                    "images/week2.3.jpeg"
                 ]
             }
         ]
@@ -124,12 +140,27 @@ function cleanNumber(value) {
     return Math.round(num * 10) / 10;
 }
 
+function computeOjtStatsFromTimes(times) {
+    let totalHours = 0;
+
+    (times || []).forEach(t => {
+        if (t.status && t.status !== "active") return;
+
+        let dayHours = 0;
+        if (t.am_in && t.am_out) dayHours += calcHoursDiff(t.am_in, t.am_out);
+        if (t.pm_in && t.pm_out) dayHours += calcHoursDiff(t.pm_in, t.pm_out);
+
+        if (dayHours > 0) totalHours += dayHours;
+    });
+
+    return cleanNumber(totalHours);
+}
+
 function formatHoursDisplay(value) {
-    let cleaned = cleanNumber(value);
-    if (Number.isInteger(cleaned)) {
-        return cleaned.toString();
-    }
-    return cleaned.toString();
+    let num = parseFloat(value);
+    if (isNaN(num)) return "0.00";
+
+    return num.toFixed(2);
 }
 
 /* ===============================
@@ -349,32 +380,38 @@ function updateStarPosition() {
    UPDATE OVERALL PROGRESS - DITO GUMAGALAW ANG STAR
 ================================ */
 function updateOverallProgress() {
-    const rawData = localStorage.getItem('ojtBlogData');
     const targetHours = 486;
     let totalHours = 0;
 
+    /* ===== FROM LOCALSTORAGE BLOG DATA ===== */
+    const rawData = localStorage.getItem('ojtBlogData');
     if (rawData) {
         const storedData = JSON.parse(rawData);
+
         for (const month in storedData) {
             storedData[month]?.forEach(week => {
                 week.pairs?.forEach(pair => {
-                    totalHours += parseFloat(pair.hours) || 0;
+                    const h = parseFloat(pair.hours);
+                    if (!isNaN(h)) totalHours += h;
                 });
             });
         }
     }
 
-    // ✅ ADD HARDCODED MAY
+    /* ===== ADD HARDCODED MAY (DISPLAY-ONLY) ===== */
     HARDCODED_MAY.forEach(week => {
         week.pairs.forEach(pair => {
-            totalHours += parseFloat(pair.hours) || 0;
+            const h = parseFloat(pair.hours);
+            if (!isNaN(h)) totalHours += h;
         });
     });
 
+    /* ===== FINAL CLEAN TOTAL ===== */
     const cleanTotalHours = cleanNumber(totalHours);
-    let percent = Math.min((cleanTotalHours / targetHours) * 100, 100);
+    const percent = Math.min((cleanTotalHours / targetHours) * 100, 100);
     const percentDisplay = Math.round(percent * 10) / 10;
 
+    /* ===== UPDATE UI ===== */
     const progressFill = document.getElementById('main-progress-fill');
     progressFill.style.width = percent + "%";
 
