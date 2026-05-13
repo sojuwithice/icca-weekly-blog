@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICCA Landing Page</title>
+    <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+
+    <div class="landing-container">
+        <div class="id-card-section">
+            <img src="ID_BLOG.png" alt="ICCA ID Card" class="id-card-img">
+        </div>
+
+        <div class="name-repeated-section">
+            <div class="marquee-content">
+                <span>ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp;</span>
+                <span>ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp;ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp; ICCA BALIN &nbsp;&nbsp;</span>
+                
+            </div>
+        </div>
+
+        <div class="weekly-blog-section">
+            <div class="title-container">
+                <h1 class="weekly-blog-text">WEEKLY BLOG</h1>
+                <div class="ojt-tag">
+                    <span>OJT EDITION</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="overall-progress-container">
+            <div class="progress-info">
+                <span class="progress-label">OJT OVERALL PROGRESS</span>
+                <span id="progress-text" class="progress-stats">0 / 486 Hours (0%)</span>
+            </div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar-bg">
+                    <div id="main-progress-fill" class="progress-bar-fill" style="width: 0%">
+                        <img id="progress-star" class="progress-star" src="star.png" alt="star">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="folders-section">
+            <div class="folder-item" onclick="showFolderContent('february')">
+                <img src="folder.png" alt="February" class="folder-img">
+                <p class="folder-label">february.</p>
+            </div>
+            <div class="folder-item" onclick="showFolderContent('march')">
+                <img src="folder.png" alt="March" class="folder-img">
+                <p class="folder-label">march.</p>
+            </div>
+            <div class="folder-item" onclick="showFolderContent('april')">
+                <img src="folder.png" alt="April" class="folder-img">
+                <p class="folder-label">april.</p>
+            </div>
+            <div class="folder-item" onclick="showFolderContent('may')">
+                <img src="folder.png" alt="May" class="folder-img">
+                <p class="folder-label">may.</p>
+            </div>
+        </div>
+
+        <div id="blog-content-area" class="blog-details-container" style="display: none;">
+        </div>
+    </div>
+
+    <div id="imgModal" class="img-modal" onclick="closeModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-close" onclick="closeModal(event)">✕</div>
+        <div id="modalGallery" class="modal-gallery"></div>
+    </div>
+</div>
+
+
+    <script>
+/* ===============================
+   HELPER: Fix decimal issues (clean numbers)
+================================ */
+function cleanNumber(value) {
+    let num = parseFloat(value);
+    if (isNaN(num)) return 0;
+    if (Math.abs(num - Math.round(num)) < 0.01) {
+        return Math.round(num);
+    }
+    return Math.round(num * 10) / 10;
+}
+
+function formatHoursDisplay(value) {
+    let cleaned = cleanNumber(value);
+    if (Number.isInteger(cleaned)) {
+        return cleaned.toString();
+    }
+    return cleaned.toString();
+}
+
+/* ===============================
+   SHOW FOLDER CONTENT
+================================ */
+function showFolderContent(month) {
+    const area = document.getElementById('blog-content-area');
+    const rawData = localStorage.getItem('ojtBlogData');
+
+    if (!rawData) {
+        area.innerHTML = `<p style="text-align:center;">Walang laman ito, teh.</p>`;
+        area.style.display = "block";
+        return;
+    }
+
+    let storedData = JSON.parse(rawData);
+    if (!storedData[month] || storedData[month].length === 0) {
+        area.innerHTML = `<p style="text-align:center;">waley pa laman hehe.</p>`;
+        area.style.display = "block";
+        return;
+    }
+
+    const data = storedData[month];
+    area.style.display = "block";
+
+    let totalMonthHours = 0;
+    let totalMonthDays = 0;
+
+    data.forEach(item => {
+        if (item.pairs && Array.isArray(item.pairs)) {
+            item.pairs.forEach(pair => {
+                const h = parseFloat(pair.hours) || 0;
+                const d = parseFloat(pair.days) || 0;
+                totalMonthHours += h;
+                totalMonthDays += d;
+            });
+        }
+    });
+    
+    totalMonthHours = cleanNumber(totalMonthHours);
+    totalMonthDays = cleanNumber(totalMonthDays);
+
+    let html = `
+        <div class="monthly-summary-container">
+            <h2 class="month-label-display">${month.toUpperCase()} SUMMARY</h2>
+            <div class="work-hours-capsule summary-pill">
+                Total Days: <span class="hours-num">${totalMonthDays}</span>
+                <span class="separator-bar">|</span>
+                Total Hours: <span class="hours-num">${totalMonthHours}</span>
+            </div>
+        </div>
+        <div class="week-accordion">
+    `;
+
+    data.forEach(item => {
+        html += `
+            <div class="week-bar" onclick="toggleWeek(this)">
+                <div class="week-title">${escapeHtml(item.week)}</div>
+                <div class="week-date">${escapeHtml(item.date || "")}</div>
+            </div>
+            <div class="week-content">
+        `;
+
+        const pairs = item.pairs || [];
+        pairs.forEach((pair, index) => {
+            const reverse = index % 2 ? 'reverse' : '';
+            const images = Array.isArray(pair.images) ? pair.images : [];
+            const sliderId = `slider-${Math.random().toString(36).substr(2, 9)}`;
+            
+            const cleanDays = formatHoursDisplay(pair.days || '0');
+            const cleanHours = formatHoursDisplay(pair.hours || '0');
+
+            html += `
+                <div class="accomplishment-card ${reverse}">
+                    <div class="acc-img-container">
+                        ${images.length ? `
+                            <div class="acc-slider" id="${sliderId}" data-images='${JSON.stringify(images)}' onclick='openModal(this.getAttribute("data-images"))'>
+                                ${images.map((img, i) => `<img src="${img}" class="slide ${i === 0 ? 'active' : ''}" onerror="this.src='placeholder.jpg'">`).join('')}
+                            </div>
+                        ` : `<img src="placeholder.jpg" class="acc-img">`}
+                    </div>
+
+                    <div class="acc-info">
+                        <div class="acc-header">
+                            <h3 class="acc-title">${escapeHtml(pair.title)}</h3>
+                            <div class="work-hours-capsule">
+                                Days Present: <span class="hours-num">${cleanDays}</span>
+                                <span class="separator-bar">|</span>
+                                Total Hours: <span class="hours-num">${cleanHours}</span>
+                            </div>
+                        </div>
+                        <p class="acc-desc">
+                            ${escapeHtml(pair.description || "").replace(/\n/g, '<br>')}
+                        </p>
+                    </div>
+                </div>
+            `;
+            if (images.length > 1) setTimeout(() => initSlider(sliderId), 100);
+        });
+        html += `</div>`;
+    });
+
+    html += `</div>`;
+    area.innerHTML = html;
+    area.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ===============================
+   ACCORDION TOGGLE
+================================ */
+function toggleWeek(el) {
+    const content = el.nextElementSibling;
+    const isOpen = content.classList.contains('open');
+
+    document.querySelectorAll('.week-content').forEach(c => {
+        c.style.maxHeight = null;
+        c.classList.remove('open');
+    });
+
+    if (!isOpen) {
+        content.classList.add('open');
+        content.style.maxHeight = content.scrollHeight + 200 + "px";
+    }
+}
+
+/* ===============================
+   IMAGE SLIDER
+================================ */
+function initSlider(sliderId) {
+    const slider = document.getElementById(sliderId);
+    if (!slider) return;
+
+    const slides = slider.querySelectorAll('.slide');
+    if (slides.length <= 1) return;
+
+    let index = 0;
+    setInterval(() => {
+        slides[index].classList.remove('active');
+        index = (index + 1) % slides.length;
+        slides[index].classList.add('active');
+    }, 3000);
+}
+
+/* ===============================
+   MODAL GALLERY
+================================ */
+function openModal(images) {
+    const modal = document.getElementById('imgModal');
+    const gallery = document.getElementById('modalGallery');
+
+    let parsedImages = [];
+
+    try {
+        parsedImages = JSON.parse(images || "[]");
+    } catch (e) {
+        console.error("Modal parse error:", e);
+        parsedImages = [];
+    }
+
+    gallery.innerHTML = parsedImages.map(img =>
+        `<img src="${img}" onerror="this.src='placeholder.jpg'">`
+    ).join('');
+
+    modal.classList.add('active');
+}
+
+function closeModal(e) {
+    const modal = document.getElementById('imgModal');
+
+    if (!e || e.target.id === 'imgModal') {
+        modal.classList.remove('active');
+    }
+
+    if (e && e.target.closest('.modal-close')) {
+        modal.classList.remove('active');
+    }
+}
+
+/* ===============================
+   UPDATE STAR POSITION - SUMASABAY SA PROGRESS
+================================ */
+function updateStarPosition() {
+    const progressFill = document.getElementById('main-progress-fill');
+    const star = document.getElementById('progress-star');
+    
+    if (progressFill && star) {
+        const fillWidth = progressFill.offsetWidth;
+        const starWidth = star.offsetWidth;
+        
+        // I-position ang star sa dulo ng progress fill
+        // Ang negative right value ay ilalagay ang star sa right edge ng fill
+        if (fillWidth > 0) {
+            // Para lumabas ng konti sa dulo ng fill
+            star.style.right = `-${starWidth / 2}px`;
+        }
+        
+        // Kapag almost full na (98% pataas), adjust para hindi lumampas
+        const parentWidth = progressFill.parentElement.offsetWidth;
+        const percentage = (fillWidth / parentWidth) * 100;
+        
+        if (percentage > 98) {
+            star.style.right = 'auto';
+            star.style.left = `${fillWidth - starWidth/2}px`;
+        }
+    }
+}
+
+/* ===============================
+   UPDATE OVERALL PROGRESS - DITO GUMAGALAW ANG STAR
+================================ */
+function updateOverallProgress() {
+    const rawData = localStorage.getItem('ojtBlogData');
+    const targetHours = 486;
+    let totalHours = 0;
+
+    if (rawData) {
+        const storedData = JSON.parse(rawData);
+        for (const month in storedData) {
+            if (storedData[month] && Array.isArray(storedData[month])) {
+                storedData[month].forEach(week => {
+                    if (week.pairs && Array.isArray(week.pairs)) {
+                        week.pairs.forEach(pair => {
+                            totalHours += parseFloat(pair.hours) || 0;
+                        });
+                    }
+                });
+            }
+        }
+    }
+    
+    let cleanTotalHours = cleanNumber(totalHours);
+    let percent = (cleanTotalHours / targetHours) * 100;
+    percent = Math.min(percent, 100);
+    let percentDisplay = Math.round(percent * 10) / 10;
+    
+    // Update ang width ng progress bar
+    const progressFill = document.getElementById('main-progress-fill');
+    progressFill.style.width = percent + "%";
+    
+    // Update ang text
+    document.getElementById('progress-text').innerText = `${cleanTotalHours} / ${targetHours} Hours (${percentDisplay}%)`;
+    
+    // IMPORTANTE: Tawagin para gumalaw ang star kasama ng progress bar
+    // Maghintay ng konti para matapos ang CSS transition
+    setTimeout(() => {
+        updateStarPosition();
+    }, 50);
+    
+    // Para siguradong tama ang position pagkatapos ng animation
+    setTimeout(() => {
+        updateStarPosition();
+    }, 850);
+}
+
+/* ===============================
+   SECURITY: Escape HTML
+================================ */
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m =>
+        m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'
+    );
+}
+
+/* ===============================
+   INITIALIZE - LISTEN SA PAGE LOAD AT STORAGE CHANGES
+================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    updateOverallProgress();
+    
+    // Gumamit ng ResizeObserver para ma-detect ang size changes ng progress bar
+    const observer = new ResizeObserver(() => {
+        updateStarPosition();
+    });
+    
+    const progressFill = document.getElementById('main-progress-fill');
+    if (progressFill) observer.observe(progressFill);
+    
+    // Makinig sa localStorage changes (kung mag-add ng hours sa ibang tab)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'ojtBlogData') {
+            updateOverallProgress();
+        }
+    });
+});
+
+// Para sa mga mag-aadd ng hours through forms, pwedeng tawagin ito manually
+window.refreshProgress = function() {
+    updateOverallProgress();
+};
+
+
+</script>
+</body>
+</html>

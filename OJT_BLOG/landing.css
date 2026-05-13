@@ -1,0 +1,928 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #F8ECE0;
+    color: #1e3a5a;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+.landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 0;
+}
+
+/* --- ID Card Section --- */
+.id-card-section {
+    width: 90%;
+    max-width: 700px;
+    margin-bottom: 60px;
+    perspective: 1000px;
+}
+
+.id-card-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 30px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    animation: floatingID 4s ease-in-out infinite;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+@keyframes floatingID {
+    0% {
+        transform: rotate(-3deg) translateY(0px);
+    }
+    50% {
+        transform: rotate(-2deg) translateY(-15px);
+    }
+    100% {
+        transform: rotate(-3deg) translateY(0px);
+    }
+}
+
+.id-card-img:hover {
+    animation-play-state: paused;
+    transform: rotate(0deg) scale(1.03) translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+/* --- Repeated Name Section (STATIC - NO MOVEMENT) --- */
+.name-repeated-section {
+    background-color: #245290;
+    color: #ffffff;
+    width: 100%;
+    padding: 15px 0;
+    margin-bottom: 60px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.marquee-content {
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.marquee-content span {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 0 20px;
+    display: inline-block;
+}
+
+/* --- Weekly Blog Section --- */
+.weekly-blog-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.title-container {
+    position: relative;
+    display: inline-block;
+}
+
+.weekly-blog-text {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 100px;
+    color: #91bad3;
+    -webkit-text-stroke: .5px #1e3a5a;
+    line-height: 1;
+    text-align: center;
+}
+
+.ojt-tag {
+    background-color: #245290;
+    padding: 10px 20px;
+    position: absolute;
+    bottom: -50px;
+    right: -10px;
+    transform: rotate(-4deg);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 6px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.ojt-tag:hover {
+    transform: rotate(-4deg) translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+.ojt-tag span {
+    color: #F8ECE0;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 40px;
+    display: block;
+}
+
+/* --- Progress Bar with Star Image and Glow --- */
+.overall-progress-container {
+    width: 90%;
+    max-width: 800px;
+    margin: 150px auto 0 auto;
+    background: #ffffff;
+    padding: 20px 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid #dcdcdc;
+    position: relative;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.progress-label {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px;
+    color: #245290;
+    letter-spacing: 1px;
+}
+
+.progress-stats {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #1e3a5a;
+}
+
+.progress-bar-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 24px;
+    background-color: #e0e0e0;
+    border-radius: 50px;
+    overflow: visible;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #91bad3, #245290);
+    border-radius: 50px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Star image on the progress bar */
+.progress-star {
+    position: absolute;
+    right: -18px;
+    top: 70%;
+    transform: translateY(-50%);
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 10;
+    transition: right 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Brighter Blue Glow effect */
+    filter: drop-shadow(0 0 5px #5ba0f0) 
+            drop-shadow(0 0 10px #3a7bd5)
+            drop-shadow(0 0 15px #1e55a0);
+    
+    /* Animation for pulsing */
+    animation: starPulse 1.5s ease-in-out infinite;
+}
+
+/* Glowing animation - Brighter Blue version */
+@keyframes starPulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1);
+        filter: drop-shadow(0 0 5px #5ba0f0) 
+                drop-shadow(0 0 10px #3a7bd5)
+                drop-shadow(0 0 15px #1e55a0);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.15);
+        filter: drop-shadow(0 0 15px #6bb3ff) 
+                drop-shadow(0 0 25px #4a90e2)
+                drop-shadow(0 0 35px #2c5aa0);
+    }
+}
+
+/* --- Folders Section --- */
+.folders-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    width: 100%;
+    max-width: 800px;
+    margin: 90px auto 40px auto;
+    padding: 0 20px;
+}
+
+.folder-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100px;
+}
+
+.folder-img {
+    width: 120%;
+    height: auto;
+    margin-bottom: -10px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.folder-img:hover {
+    transform: scale(1.05);
+}
+
+.folder-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1e3a5a;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* --- Blog Details Container --- */
+.blog-details-container {
+    background-color: #ffffff;
+    width: 95%;
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 25px;
+    border: 1.5px solid #dcdcdc;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* --- Week Bar --- */
+.week-bar {
+    background-color: #91bad3;
+    color: #1e3a5a;
+    width: 100%;
+    padding: 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: none;
+}
+
+.week-bar:hover {
+    background-color: #7aaccb;
+}
+
+/* --- Accordion Body --- */
+.week-content {
+    background-color: #F8ECE0;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s ease;
+}
+
+.accomplishment-card.reverse {
+    grid-template-columns: 1fr 200px;
+}
+
+.accomplishment-card.reverse .acc-img-container {
+    order: 2;
+}
+
+.accomplishment-card.reverse .acc-info {
+    order: 1;
+    text-align: right;
+}
+
+.accomplishment-card.reverse .acc-header {
+    flex-direction: row-reverse;
+}
+
+.accomplishment-card {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 30px;
+    background-color: #f8ece0;
+    padding: 30px;
+    border-radius: 24px;
+    align-items: start;
+}
+
+.acc-img-container {
+    width: 200px;
+    height: 200px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #ddd;
+}
+
+.acc-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.acc-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.acc-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 26px;
+    color: #1e3a5a;
+    margin: 0;
+}
+
+/* Capsule Design */
+.work-hours-capsule {
+    display: inline-flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1.5px solid #1e3a5a;
+    padding: 6px 20px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
+    text-transform: lowercase;
+    gap: 10px;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.hours-num {
+    color: #3b5998;
+    font-weight: 800;
+}
+
+.separator-bar {
+    color: #91bad3;
+    font-weight: 300;
+    margin: 0 2px;
+}
+
+.week-title {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.acc-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1e3a5a;
+}
+
+/* Monthly Summary */
+.monthly-summary-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px 30px 10px;
+    border-bottom: 2px dashed #91bad3;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.month-label-display {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 28px;
+    color: #245290;
+    letter-spacing: -1px;
+}
+
+.summary-pill {
+    padding: 10px 30px;
+    font-size: 20px;
+    background-color: #f0f4f8;
+}
+
+/* Slider */
+.acc-slider {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.acc-slider img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.acc-slider img.active {
+    opacity: 1;
+}
+
+/* Modal */
+.img-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.img-modal.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #fff;
+    max-width: 90%;
+    max-height: 85%;
+    padding: 20px;
+    border-radius: 16px;
+    overflow-y: auto;
+}
+
+.modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    padding: 10px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-gallery img {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.modal-close {
+    text-align: right;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+/* --- MOBILE RESPONSIVE --- */
+
+/* Tablet and smaller devices */
+@media (max-width: 768px) {
+    .landing-container {
+        padding: 40px 15px;
+    }
+
+    /* ID Card */
+    .id-card-section {
+        width: 90%;
+        margin-bottom: 40px;
+    }
+
+    /* Name Repeat Section - NO WRAP, Horizontal Scroll */
+    .name-repeated-section {
+        width: 120%;
+        padding: 12px 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+    }
+    
+    .marquee-content {
+        display: inline-flex;
+        white-space: nowrap;
+    }
+    
+    .marquee-content span {
+        font-size: 13px;
+        padding: 0 15px;
+        letter-spacing: 1.5px;
+        white-space: nowrap;
+    }
+
+    /* Weekly Blog Title */
+    .weekly-blog-text {
+        font-size: 55px;
+        -webkit-text-stroke: 1px #1e3a5a;
+    }
+
+    .ojt-tag {
+        padding: 6px 12px;
+        bottom: -30px;
+        right: -5px;
+    }
+
+    .ojt-tag span {
+        font-size: 22px;
+    }
+
+    /* Progress Bar */
+    .overall-progress-container {
+        margin: 100px auto 0 auto;
+        padding: 15px 20px;
+    }
+    
+    .progress-info {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .progress-label {
+        font-size: 12px;
+    }
+    
+    .progress-stats {
+        font-size: 12px;
+    }
+    
+    .progress-star {
+        width: 90px;
+        height: 90px;
+        right: -12px;
+        top: 60%;
+    }
+    
+    .progress-bar-bg {
+        height: 18px;
+    }
+
+    /* Folders */
+    .folders-section {
+        gap: 25px;
+        margin-top: 60px;
+        flex-wrap: wrap;
+    }
+
+    .folder-item {
+        width: 85px;
+    }
+
+    .folder-label {
+        font-size: 13px;
+    }
+
+    /* Blog Container */
+    .blog-details-container {
+        width: 100%;
+        padding: 20px 15px;
+        margin: 30px auto;
+        border-radius: 20px;
+    }
+
+    /* Week Bar */
+    .week-bar {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .week-title {
+        font-size: 22px;
+    }
+    
+    .week-date {
+        font-size: 12px;
+    }
+
+    /* Accomplishment Cards */
+    .accomplishment-card,
+    .accomplishment-card.reverse {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .accomplishment-card.reverse .acc-info {
+        text-align: center;
+    }
+    
+    .accomplishment-card.reverse .acc-header {
+        flex-direction: column;
+    }
+
+    /* FIXED: Image styles only - no background, perfect fit */
+    .acc-img-container {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 250px;
+        height: 200px;
+        background: transparent;
+        border-radius: 18px;
+        overflow: hidden;
+    }
+    
+    .acc-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        background: transparent;
+    }
+    
+    .acc-slider {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        border-radius: 18px;
+    }
+    
+    .acc-slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        background: transparent;
+    }
+
+    .acc-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .acc-title {
+        font-size: 22px;
+    }
+    
+    .work-hours-capsule {
+        font-size: 13px;
+        padding: 5px 15px;
+        white-space: normal;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Monthly Summary */
+    .monthly-summary-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 10px 5px 20px 5px;
+    }
+    
+    .month-label-display {
+        font-size: 24px;
+    }
+    
+    .summary-pill {
+        font-size: 16px;
+        padding: 8px 20px;
+    }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+
+    .id-card-img{
+        border-radius: 20px;
+    }
+    
+    .landing-container {
+        padding: 30px 10px;
+    }
+    
+    /* Name Repeat - NO WRAP */
+    .name-repeated-section {
+        padding: 10px 0;
+    }
+    
+    .marquee-content span {
+        font-size: 11px;
+        padding: 0 10px;
+        letter-spacing: 1px;
+    }
+    
+    /* Weekly Blog Title */
+    .weekly-blog-text {
+        font-size: 45px;
+        -webkit-text-stroke: 0.5px #1e3a5a;
+    }
+    
+    .ojt-tag {
+        padding: 4px 10px;
+        bottom: -25px;
+        right: -8px;
+    }
+    
+    .ojt-tag span {
+        font-size: 20px;
+    }
+    
+    /* Progress Bar */
+    .overall-progress-container {
+        padding: 12px 15px;
+        margin: 80px auto 0 auto;
+    }
+    
+    .progress-label {
+        font-size: 11px;
+    }
+    
+    .progress-stats {
+        font-size: 11px;
+    }
+    
+    .progress-star {
+        width: 60px;
+        height: 60px;
+        right: -10px;
+        top: 65%;
+    }
+    
+    .progress-bar-bg {
+        height: 16px;
+    }
+    
+    /* Folders */
+    .folders-section {
+        gap: 15px;
+        margin-top: 50px;
+    }
+    
+    .folder-item {
+        width: 80px;
+    }
+    
+    .folder-img {
+        width: 110%;
+    }
+    
+    .folder-label {
+        font-size: 12px;
+    }
+    
+    /* Blog Container */
+    .blog-details-container {
+        padding: 15px 12px;
+    }
+    
+    /* Week Bar */
+    .week-bar {
+        padding: 12px;
+    }
+    
+    .week-title {
+        font-size: 18px;
+    }
+    
+    .week-date {
+        font-size: 10px;
+    }
+    
+    /* Cards */
+    .accomplishment-card,
+    .accomplishment-card.reverse {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    /* FIXED: Image styles for small mobile */
+    .acc-img-container {
+        max-width: 220px;
+        height: 180px;
+        background: transparent;
+    }
+    
+    .acc-title {
+        font-size: 18px;
+    }
+    
+    .acc-desc {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    
+    .work-hours-capsule {
+        font-size: 11px;
+        padding: 4px 12px;
+        gap: 6px;
+    }
+    
+    /* Monthly Summary */
+    .month-label-display {
+        font-size: 20px;
+    }
+    
+    .summary-pill {
+        font-size: 13px;
+        padding: 6px 15px;
+    }
+    
+    /* FIXED: Slider images */
+    .acc-slider {
+        height: 180px;
+        background: transparent;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+    .weekly-blog-text {
+        font-size: 32px;
+    }
+    
+    .ojt-tag span {
+        font-size: 14px;
+    }
+    
+    .folder-item {
+        width: 60px;
+    }
+    
+    .folder-label {
+        font-size: 10px;
+    }
+    
+    .progress-star {
+        width: 50px;
+        height: 50px;
+        right: -8px;
+    }
+    
+    /* FIXED: Image styles for extra small */
+    .acc-img-container {
+        max-width: 200px;
+        height: 160px;
+    }
+    
+    .acc-slider {
+        height: 160px;
+    }
+    
+    .acc-title {
+        font-size: 16px;
+    }
+    
+    .month-label-display {
+        font-size: 18px;
+    }
+}
+
+/* Landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+    .landing-container {
+        padding: 20px 0;
+    }
+    
+    .id-card-section {
+        margin-bottom: 20px;
+    }
+    
+    .name-repeated-section {
+        margin-bottom: 20px;
+    }
+    
+    .overall-progress-container {
+        margin: 40px auto 0 auto;
+    }
+    
+    .folders-section {
+        margin: 40px auto 20px auto;
+    }
+    
+    /* FIXED: Image styles for landscape */
+    .acc-img-container {
+        max-width: 200px;
+        height: 150px;
+    }
+    
+    .acc-slider {
+        height: 150px;
+    }
+}

@@ -1,0 +1,97 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    /* Ang beige na background sa labas ng card */
+    background-color: #F8ECE0; 
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Iwas scrollbar */
+}
+
+.card {
+    /* Ito yung malaking blue section */
+    background-color: #91bad3; 
+    width: 95%; /* Halos sakop ang width */
+    max-width: 1400px;
+    height: 90vh; /* 85% ng height ng screen */
+    border-radius: 20px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* dagdag para centered talaga */
+    gap: 25px;
+}
+
+.laptop-img {
+    width: 380px;
+    max-width: 85%;
+    height: auto;
+
+    /* FIX: alisin negative margin */
+    margin-top: 0;
+
+    /* optional polish */
+    animation: float 4s ease-in-out infinite;
+}
+
+/* floating effect (optional pero recommended) */
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0); }
+}
+
+.blog-button {
+    text-decoration: none;
+    color: #0d2c4a;
+    border: 1.5px solid #0d2c4a;
+    padding: 12px 45px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+    background-color: transparent;
+
+    /* FIX: remove negative margin */
+    margin-top: -50px;
+}
+
+/* --- HOVER EFFECT --- */
+.blog-button:hover {
+    background-color: #0d2c4a;
+    color: #ffffff;
+    box-shadow: 0 8px 15px rgba(13, 44, 74, 0.2);
+    transform: translateY(-3px);
+}
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+    .card {
+        height: 90vh; /* Medyo liitan ang height sa mobile para proportion */
+        width: 90%;
+    }
+    
+    .laptop-img {
+        width: 200px;
+        margin-bottom: 50px;
+    }
+
+    .blog-button {
+        padding: 10px 30px;
+        font-size: 0.9rem;
+    }
+}
